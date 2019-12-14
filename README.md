@@ -12,11 +12,11 @@ Pong is a two-dimensional sports game that simulates table tennis. The player co
 
 - LÖVE
 
-You can get it right [here](https://love2d.org/)
+You can get it right [here](https://love2d.org/).
 
 ## Execute
 Just run:
 ```
 love .
 ```
-In the src directory
+In the src directory.
