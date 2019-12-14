@@ -2,7 +2,8 @@
 local Paddle = {}
 Paddle.__index = Paddle
 
-function Paddle:new(x, y, width, height, top_limit, bottom_limit ,speed)
+function Paddle:new(x, y, width, height, up_key, down_key,
+                    top_limit, bottom_limit ,speed)
   local new_paddle ={}
   setmetatable(new_paddle, Paddle)
   -- Set the Paddle properties to the ones passed or to the default
@@ -10,6 +11,10 @@ function Paddle:new(x, y, width, height, top_limit, bottom_limit ,speed)
   new_paddle.y = y or 0
   new_paddle.width = width or 0
   new_paddle.height = height or 0
+  -- Obligatory parameters
+  assert(up_key or down_key,'Incomplete class parameters, keys are obligatory')
+  new_paddle.up_key = up_key
+  new_paddle.down_key = down_key
   -- Limit in which the paddle can move
   new_paddle.top_limit = top_limit or -math.huge
   new_paddle.bottom_limit = bottom_limit -  or math.huge
@@ -19,8 +24,18 @@ function Paddle:new(x, y, width, height, top_limit, bottom_limit ,speed)
   return new_paddle
 end
 
--- Update the values of the object
+-- Update the values of the paddle
 function Paddle:update(dt)
+  -- Reset the paddle velocity
+  self.velocity = 0
+  -- Check if any of the key is pressed
+  if love.keyboard.isDown(self.up_key) then
+    self.velocity = self.velocity - (self.speed * dt)
+  end
+  if love.keyboard.isDown(self.down_key) then
+    self.velocity = self.velocity + (self.speed * dt)
+  end
+  -- Update paddle position
   if self.velocity < 0 then
     self.y = math.max(self.y - self.velocity, self.top_limit)
   else if self.velocity > 0 then
@@ -28,7 +43,7 @@ function Paddle:update(dt)
   end
 end
 
--- Draw the object
+-- Draw the paddle
 function Paddle:draw()
   love.graphics.rectangle('fill', self.x, self.y, self.width, self.height)
 end
