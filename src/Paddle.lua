@@ -17,7 +17,7 @@ function Paddle:new(x, y, width, height, up_key, down_key,
   new_paddle.down_key = down_key
   -- Limit in which the paddle can move
   new_paddle.top_limit = top_limit or -math.huge
-  new_paddle.bottom_limit = bottom_limit -  or math.huge
+  new_paddle.bottom_limit = bottom_limit - new_paddle.height or math.huge
   new_paddle.speed = speed or 200
   -- Fixed properties
   new_paddle.velocity = 0
@@ -37,9 +37,9 @@ function Paddle:update(dt)
   end
   -- Update paddle position
   if self.velocity < 0 then
-    self.y = math.max(self.y - self.velocity, self.top_limit)
-  else if self.velocity > 0 then
-    self.y = math.min(self.y + self.velocity + self.height, self.bottom_limit)
+    self.y = math.max(self.y + self.velocity, self.top_limit)
+  elseif self.velocity > 0 then
+    self.y = math.min(self.y + self.velocity, self.bottom_limit)
   end
 end
 
