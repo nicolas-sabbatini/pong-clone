@@ -2,6 +2,7 @@
 local Paddle = {}
 Paddle.__index = Paddle
 
+-- Create a new paddle
 function Paddle:new(x, y, width, height, up_key, down_key,
                     top_limit, bottom_limit ,speed)
   local new_paddle ={}
