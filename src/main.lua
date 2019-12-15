@@ -1,5 +1,6 @@
 -- Load modules
 local push = require('push')
+local Paddle = require('Paddle')
 
 -- The resolution in witch the game is going to be render
 FAKE_WIDTH = 432
@@ -19,17 +20,28 @@ function love.load()
   -- Set the push library
   local win_width, win_height = love.graphics.getDimensions()
   push:setupScreen(FAKE_WIDTH, FAKE_HEIGHT, win_width, win_height)
+  -- Create palyers
+  palyers = {}
+  palyers[1] = Paddle:new(15, (FAKE_HEIGHT/2) - 12, 6, 24,
+                         'w', 's', 0, FAKE_HEIGHT)
+  palyers[2] = Paddle:new(FAKE_WIDTH - 21, (FAKE_HEIGHT/2) - 12, 6, 24,
+                         'up', 'down', 0, FAKE_HEIGHT)
 end
 
 function love.update(dt)
   -- An exit key
   if love.keyboard.isDown('escape') then love.event.quit() end
+  for k, player in pairs(palyers) do
+    player:update(dt)
+  end
 end
 
 function love.draw()
   -- Push resolution
   push:apply('start')
-  
+  for k, player in pairs(palyers) do
+    player:draw(dt)
+  end
   -- Pop resolution
   push:apply('end')
 end
