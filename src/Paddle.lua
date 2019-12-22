@@ -13,7 +13,7 @@ function Paddle:new(x, y, width, height, up_key, down_key,
   new_paddle.width = width or 0
   new_paddle.height = height or 0
   -- Obligatory parameters
-  assert(up_key or down_key,'Incomplete class parameters, keys are obligatory')
+  assert(up_key and down_key,'Incomplete class parameters, keys are obligatory')
   new_paddle.up_key = up_key
   new_paddle.down_key = down_key
   -- Limit in which the paddle can move
