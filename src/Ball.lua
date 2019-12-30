@@ -2,7 +2,7 @@ local Ball = {}
 Ball.__index = Ball
 
 -- Create a new Ball
-function Ball:new(x, y, width, height)
+function Ball:new(x, y, width, height, acceleration)
   local new_ball = {}
   setmetatable(new_ball, Ball)
   -- Set the Ball properties to the ones passed or to the default
@@ -10,6 +10,7 @@ function Ball:new(x, y, width, height)
   new_ball.y = y or 0
   new_ball.width = width or 0
   new_ball.height = height or 0
+  new_ball.acceleration = acceleration or 10
   new_ball.velocity_x = 0
   new_ball.velocity_y = 0
   -- Set the default reset values
@@ -47,4 +48,14 @@ function Ball:draw()
   love.graphics.rectangle('fill', self.x, self.y, self.width, self.height)
 end
 
+-- Check if the ball is collides with a given rectangle
+function Ball:collisionAABB(top_left_x, top_left_y, width, height)
+  if( self.x               < top_left_x + width  and
+      self.x + self.width  > top_left_x          and
+      self.y               < top_left_y + height and
+      self.y + self.height > top_left_y             ) then
+    return true 
+  end
+  return false
+end
 return Ball
