@@ -82,14 +82,14 @@ function love.update(dt)
     ball:reset()
     serve_to = -1
     score[2] = score[2] + 1
-    state = score[2] > 10 and 'waiting' or 'win'
+    state = score[2] < 10 and 'waiting' or 'win'
   end
   -- Right
   if ball:collisionAABB(FAKE_WIDTH, 0, 100, FAKE_HEIGHT) then 
     ball:reset()
     serve_to = 1
     score[1] = score[1] + 1
-    state = score[1] > 10 and 'waiting' or 'win'
+    state = score[1] < 10 and 'waiting' or 'win'
   end
   ball:update(dt)
 end
@@ -107,7 +107,7 @@ function love.draw()
   elseif state == 'win' then
     love.graphics.setFont(ui_font)
     love.graphics.printf('PLAYER ' .. (serve_to == 1 and 1 or 2) ..
-                         ' WINS THE GAME', 0, 25, FAKE_WIDTH, 'center')  
+                       ' WINS THE GAME\nREMATCH?', 0, 25, FAKE_WIDTH, 'center')
   end
   -- Draw scores
   love.graphics.setFont(score_font)
