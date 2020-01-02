@@ -7,6 +7,12 @@ local Ball   = require('Ball')
 FAKE_WIDTH = 432
 FAKE_HEIGHT = 243
 
+-- This function is caled every time we resize the application
+function love.resize(width, height)
+  -- Resize the game
+  push:resize(width, height)
+end
+
 -- This function is caled on the start of the game
 function love.load()
   -- Set random seed
@@ -110,6 +116,7 @@ end
 function love.draw()
   -- Push resolution
   push:apply('start')
+  love.graphics.clear(0, 0.06, 0.24)
   if state == 'ready' then
     love.graphics.setFont(ui_font)
     love.graphics.printf('READY?', 0, 25, FAKE_WIDTH, 'center')
