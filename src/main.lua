@@ -33,6 +33,13 @@ function love.load()
   state = 'ready'
   -- Select to witch player we need to serve
   serve_to = nil 
+  -- Sound efects
+  sounds = {}
+  sounds.paddle_hit = love.audio.newSource('assets/sound/paddle_hit.wav',
+                                           'static')
+  sounds.score = love.audio.newSource('assets/sound/score.wav', 'static')
+  sounds.wall_hit = love.audio.newSource('assets/sound/wall_hit.wav',
+                                         'static')
 end
 
 function love.update(dt)
@@ -57,11 +64,13 @@ function love.update(dt)
   if ball:collisionAABB(0, -100, FAKE_WIDTH, 100) then 
     ball.velocity_y = -ball.velocity_y
     ball.y = 1
+    sounds.wall_hit:play()
   end
   -- Botom of the screen
   if ball:collisionAABB(0, FAKE_HEIGHT, FAKE_WIDTH, 100)  then 
     ball.velocity_y = -ball.velocity_y
     ball.y = FAKE_HEIGHT - ball.height - 1
+    sounds.wall_hit:play()
   end
   -- Players
   if ball:collisionAABB(players[1].x,     players[1].y,
@@ -69,12 +78,14 @@ function love.update(dt)
     ball.velocity_x = - (ball.velocity_x - ball.acceleration)
     ball.velocity_y = 120 * (love.math.random() * 2 - 1)
     ball.x = players[1].x + players[1].width + 1
+    sounds.paddle_hit:play()
   end
   if ball:collisionAABB(players[2].x,     players[2].y,
                         2, players[2].height) then
     ball.velocity_x = - (ball.velocity_x + ball.acceleration)
     ball.velocity_y = 120 * (love.math.random() * 2 - 1)
     ball.x = players[2].x - ball.width - 1
+    sounds.paddle_hit:play()
   end
   -- The end of the screen
   -- Lefth
@@ -83,6 +94,7 @@ function love.update(dt)
     serve_to = -1
     score[2] = score[2] + 1
     state = score[2] < 10 and 'waiting' or 'win'
+    sounds.score:play()
   end
   -- Right
   if ball:collisionAABB(FAKE_WIDTH, 0, 100, FAKE_HEIGHT) then 
@@ -90,6 +102,7 @@ function love.update(dt)
     serve_to = 1
     score[1] = score[1] + 1
     state = score[1] < 10 and 'waiting' or 'win'
+    sounds.score:play()
   end
   ball:update(dt)
 end
