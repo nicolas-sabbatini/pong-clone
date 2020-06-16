@@ -19,4 +19,4 @@ Just run:
 ```
 love .
 ```
-In the src directory.
+In the love2d directory.
