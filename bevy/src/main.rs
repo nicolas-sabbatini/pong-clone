@@ -7,6 +7,7 @@ mod camera;
 mod config;
 mod constants;
 mod flow_control;
+mod play_state;
 
 fn main() {
     let mut app = App::new();
@@ -15,7 +16,7 @@ fn main() {
         DefaultPlugins
             .set(WindowPlugin {
                 primary_window: Some(Window {
-                    resolution: WindowResolution::new(GAME_WIDTH * 2.0, GAME_HEIGHT * 2.0),
+                    resolution: WindowResolution::new(GAME_WIDTH, GAME_HEIGHT),
                     title: WINDOW_TITLE.to_string(),
                     ..default()
                 }),
@@ -25,7 +26,12 @@ fn main() {
     )
     .insert_resource(Msaa::Off);
 
-    app.add_plugins((camera::Plug, flow_control::Plug, asset_loading::Plug));
+    app.add_plugins((
+        camera::Plug,
+        flow_control::Plug,
+        asset_loading::Plug,
+        play_state::Plug,
+    ));
 
     app.run();
 }

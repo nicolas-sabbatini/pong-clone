@@ -11,8 +11,8 @@ pub const WINDOW_CAMERA_CLEAR_COLOR: Color = Color::Rgba {
     alpha: 1.0,
 };
 
-pub const GAME_WIDTH: f32 = 432.0;
-pub const GAME_HEIGHT: f32 = 234.0;
+pub const GAME_WIDTH: f32 = 864.0;
+pub const GAME_HEIGHT: f32 = 468.0;
 pub const GAME_CAMERA_NAME: &str = "game camera";
 pub const GAME_CAMERA_TARGET_NAME: &str = "game camera target";
 pub const GAME_CAMERA_CLEAR_COLOR: Color = Color::Rgba {

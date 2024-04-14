@@ -14,6 +14,7 @@ pub enum GameState {
 pub enum PlayState {
     #[default]
     None,
+    Match,
 }
 
 pub struct Plug;
