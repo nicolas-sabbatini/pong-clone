@@ -7,10 +7,12 @@ use crate::flow_control::GameState;
 pub struct Plug;
 impl Plugin for Plug {
     fn build(&self, app: &mut App) {
-        app.init_resource::<AssetList>().add_systems(
-            Update,
-            (check_asset_loading).run_if(in_state(GameState::LoadAssets)),
-        );
+        app.init_resource::<AssetList>()
+            .add_systems(
+                Update,
+                (check_asset_loading).run_if(in_state(GameState::LoadAssets)),
+            )
+            .add_systems(OnExit(GameState::LoadAssets), clear_asset_list);
     }
 }
 
@@ -45,4 +47,8 @@ pub fn check_asset_loading(
         }
         _ => {}
     };
+}
+
+fn clear_asset_list(mut asset_server: ResMut<AssetList>) {
+    asset_server.0.clear();
 }

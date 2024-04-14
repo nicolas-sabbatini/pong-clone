@@ -1,11 +1,9 @@
-use bevy::prelude::{IVec2, KeyCode};
+use bevy::prelude::{KeyCode, Vec3};
 
-const UP: IVec2 = IVec2::Y;
-const DOWN: IVec2 = IVec2::NEG_Y;
+const UP: Vec3 = Vec3::Y;
+const DOWN: Vec3 = Vec3::NEG_Y;
 
-pub const DIR_KEY_MAPPING: [(KeyCode, IVec2); 4] = [
-    (KeyCode::KeyW, UP),
-    (KeyCode::KeyS, DOWN),
-    (KeyCode::ArrowUp, UP),
-    (KeyCode::ArrowDown, DOWN),
-];
+pub const KEY_MAPPING_PLAYER_1: [(KeyCode, Vec3); 2] = [(KeyCode::KeyW, UP), (KeyCode::KeyS, DOWN)];
+
+pub const KEY_MAPPING_PLAYER_2: [(KeyCode, Vec3); 2] =
+    [(KeyCode::ArrowUp, UP), (KeyCode::ArrowDown, DOWN)];
