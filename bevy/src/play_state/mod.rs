@@ -5,8 +5,12 @@ use crate::{
     flow_control::{GameState, PlayState},
 };
 
-use self::paddle::{PADDLE_HEIGHT, PADDLE_WIDTH};
+use self::{
+    ball::{BALL_HEIGHT, BALL_WIDTH},
+    paddle::{PADDLE_HEIGHT, PADDLE_WIDTH},
+};
 
+mod ball;
 mod paddle;
 
 #[derive(Resource)]
@@ -20,13 +24,19 @@ struct PaddleSprite {
     material: Handle<ColorMaterial>,
 }
 
+#[derive(Resource)]
+struct BallSprite {
+    mesh: Mesh2dHandle,
+    material: Handle<ColorMaterial>,
+}
+
 pub struct Plug;
 impl Plugin for Plug {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, load_assets)
             .add_systems(OnEnter(GameState::RunMainLoop), start_game);
 
-        app.add_plugins(paddle::Plug);
+        app.add_plugins((paddle::Plug, ball::Plug));
     }
 }
 
@@ -46,6 +56,13 @@ fn load_assets(
     commands.insert_resource(PaddleSprite {
         mesh: paddle_mesh,
         material: paddle_material,
+    });
+
+    let ball_mesh = Mesh2dHandle(meshes.add(Rectangle::new(BALL_WIDTH, BALL_HEIGHT)));
+    let ball_material = materials.add(Color::rgb(1.0, 1.0, 1.0));
+    commands.insert_resource(BallSprite {
+        mesh: ball_mesh,
+        material: ball_material,
     });
 }
 

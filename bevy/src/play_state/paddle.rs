@@ -24,7 +24,7 @@ impl Plugin for Plug {
         app.add_systems(OnEnter(GameState::RunMainLoop), spawn_player)
             .add_systems(
                 Update,
-                ((move_player_1, move_player_2), fix_player_positions)
+                ((move_player_1, move_player_2), collide_player_wall)
                     .chain()
                     .run_if(in_state(PlayState::Match)),
             );
@@ -83,7 +83,7 @@ fn move_player_2(
     }
 }
 
-fn fix_player_positions(mut query: Query<&mut Transform, Or<(With<Player1>, With<Player2>)>>) {
+fn collide_player_wall(mut query: Query<&mut Transform, Or<(With<Player1>, With<Player2>)>>) {
     for mut transform in &mut query {
         let paddle_height = PADDLE_HEIGHT / 2.0;
         if transform.translation.y + paddle_height > GAME_HEIGHT / 2.0 {
