@@ -1,15 +1,14 @@
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
+use bevy::{math::bounding::Aabb2d, prelude::*, sprite::MaterialMesh2dBundle};
 
 use crate::{
     flow_control::{GameState, PlayState},
-    GAME_HEIGHT, GAME_WIDTH,
+    GAME_HEIGHT,
 };
 
-use super::BallSprite;
+use super::{BallSprite, HitBox};
 
 pub const BALL_WIDTH: f32 = 12.0;
 pub const BALL_HEIGHT: f32 = 12.0;
-const BALL_MOVEMENT: f32 = 250.0;
 
 #[derive(Component)]
 struct Ball;
@@ -38,8 +37,11 @@ fn spawn_ball(mut commands: Commands, paddle_sprites: Res<BallSprite>) {
             transform: Transform::from_xyz(0.0, 0.0, 10.0),
             ..default()
         },
+        HitBox {
+            poligon: Rectangle::new(BALL_WIDTH, BALL_HEIGHT),
+        },
         Ball,
-        Speed(Vec3::new(100.0, 400.0, 0.0)),
+        Speed(Vec3::new(10.0, 100.0, 0.0)),
     ));
 }
 

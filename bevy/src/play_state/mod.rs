@@ -1,4 +1,4 @@
-use bevy::{prelude::*, sprite::Mesh2dHandle};
+use bevy::{math::bounding::Aabb2d, prelude::*, sprite::Mesh2dHandle};
 
 use crate::{
     asset_loading::AssetList,
@@ -30,11 +30,17 @@ struct BallSprite {
     material: Handle<ColorMaterial>,
 }
 
+#[derive(Component)]
+struct HitBox {
+    poligon: Rectangle,
+}
+
 pub struct Plug;
 impl Plugin for Plug {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, load_assets)
-            .add_systems(OnEnter(GameState::RunMainLoop), start_game);
+            .add_systems(OnEnter(GameState::RunMainLoop), start_game)
+            .add_systems(Update, draw_coliders);
 
         app.add_plugins((paddle::Plug, ball::Plug));
     }
@@ -69,4 +75,17 @@ fn load_assets(
 fn start_game(mut next_state: ResMut<NextState<PlayState>>) {
     // Change state to game start
     next_state.set(PlayState::Match);
+}
+
+fn draw_coliders(mut gizmos: Gizmos, query: Query<(&HitBox, &GlobalTransform)>) {
+    let color = Color::RED;
+    for (hit_box, transform) in query.iter() {
+        let (_, rotation, translation) = transform.to_scale_rotation_translation();
+        gizmos.primitive_2d(
+            hit_box.poligon,
+            translation.xy(),
+            rotation.to_euler(EulerRot::YXZ).2,
+            color,
+        );
+    }
 }

@@ -1,4 +1,4 @@
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
+use bevy::{math::bounding::Aabb2d, prelude::*, sprite::MaterialMesh2dBundle};
 
 use crate::{
     constants::{KEY_MAPPING_PLAYER_1, KEY_MAPPING_PLAYER_2},
@@ -6,11 +6,19 @@ use crate::{
     GAME_HEIGHT, GAME_WIDTH,
 };
 
-use super::PaddleSprite;
+use super::{HitBox, PaddleSprite};
 
 pub const PADDLE_WIDTH: f32 = 12.0;
 pub const PADDLE_HEIGHT: f32 = 60.0;
 const PADDLE_MOVEMENT: f32 = 250.0;
+const PADDLE_SEGMENTS: usize = 5;
+
+#[derive(Component)]
+enum ReflexTo {
+    Center,
+    Up(f32),
+    Down(f32),
+}
 
 #[derive(Component)]
 struct Player1;
@@ -33,24 +41,56 @@ impl Plugin for Plug {
 
 fn spawn_player(mut commands: Commands, paddle_sprites: Res<PaddleSprite>) {
     let player_x = GAME_WIDTH / 2.0 - PADDLE_WIDTH * 3.0;
-    commands.spawn((
-        MaterialMesh2dBundle {
-            mesh: paddle_sprites.mesh.clone(),
-            material: paddle_sprites.material.clone(),
-            transform: Transform::from_xyz(player_x * -1.0, 0.0, 10.0),
-            ..default()
-        },
-        Player1,
-    ));
-    commands.spawn((
-        MaterialMesh2dBundle {
-            mesh: paddle_sprites.mesh.clone(),
-            material: paddle_sprites.material.clone(),
-            transform: Transform::from_xyz(player_x, 0.0, 10.0),
-            ..default()
-        },
-        Player2,
-    ));
+    commands
+        .spawn((
+            MaterialMesh2dBundle {
+                mesh: paddle_sprites.mesh.clone(),
+                material: paddle_sprites.material.clone(),
+                transform: Transform::from_xyz(player_x * -1.0, 0.0, 10.0),
+                ..default()
+            },
+            Player1,
+        ))
+        .with_children(|paddle| {
+            for i in 0..PADDLE_SEGMENTS {
+                let off_set = i as f32 - 2.0;
+                paddle.spawn((
+                    TransformBundle {
+                        local: Transform::from_xyz(0.0, PADDLE_WIDTH * off_set, 0.0),
+                        ..default()
+                    },
+                    HitBox {
+                        poligon: Rectangle::new(PADDLE_WIDTH, PADDLE_WIDTH),
+                    },
+                    ReflexTo::Center,
+                ));
+            }
+        });
+    commands
+        .spawn((
+            MaterialMesh2dBundle {
+                mesh: paddle_sprites.mesh.clone(),
+                material: paddle_sprites.material.clone(),
+                transform: Transform::from_xyz(player_x, 0.0, 10.0),
+                ..default()
+            },
+            Player2,
+        ))
+        .with_children(|paddle| {
+            for i in 0..PADDLE_SEGMENTS {
+                let off_set = i as f32 - 2.0;
+                paddle.spawn((
+                    TransformBundle {
+                        local: Transform::from_xyz(0.0, PADDLE_WIDTH * off_set, 0.0),
+                        ..default()
+                    },
+                    HitBox {
+                        poligon: Rectangle::new(PADDLE_WIDTH, PADDLE_WIDTH),
+                    },
+                    ReflexTo::Center,
+                ));
+            }
+        });
 }
 
 fn move_player_1(
