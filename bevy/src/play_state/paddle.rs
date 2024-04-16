@@ -50,13 +50,20 @@ fn spawn_player(mut commands: Commands, paddle_sprites: Res<PaddleSprite>) {
         for i in 0..PADDLE_SEGMENTS {
             let off_set = i as f32 - 2.0;
             let y_offset = PADDLE_WIDTH * off_set;
+            let reflex = if off_set < 0.0 {
+                ReflexTo::Down(off_set * -1.15)
+            } else if off_set == 0.0 {
+                ReflexTo::Center
+            } else {
+                ReflexTo::Up(off_set * 1.15)
+            };
             paddle.spawn((
                 Transform::from_xyz(x_pos, y_offset, 0.0),
                 YOffset(y_offset),
                 HitBox {
                     poligon: Rectangle::new(PADDLE_WIDTH, PADDLE_WIDTH),
                 },
-                ReflexTo::Center,
+                reflex,
             ));
         }
     };
