@@ -1,8 +1,8 @@
-use bevy::{math::bounding::Aabb2d, prelude::*, sprite::MaterialMesh2dBundle};
+use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
 use crate::{
     constants::{KEY_MAPPING_PLAYER_1, KEY_MAPPING_PLAYER_2},
-    flow_control::{GameState, PlayState},
+    flow_control::{GameState, PlayState, UpdateStages},
     GAME_HEIGHT, GAME_WIDTH,
 };
 
@@ -21,6 +21,9 @@ enum ReflexTo {
 }
 
 #[derive(Component)]
+struct YOffset(f32);
+
+#[derive(Component)]
 struct Player1;
 
 #[derive(Component)]
@@ -32,13 +35,16 @@ impl Plugin for Plug {
         app.add_systems(OnEnter(GameState::RunMainLoop), spawn_player)
             .add_systems(
                 Update,
-                ((move_player_1, move_player_2), collide_player_wall)
-                    .chain()
+                (
+                    (handle_input_player_1, handle_input_player_2).in_set(UpdateStages::Input),
+                    move_players.in_set(UpdateStages::Movement),
+                )
                     .run_if(in_state(PlayState::Match)),
             );
     }
 }
 
+#[allow(clippy::needless_pass_by_value, clippy::cast_precision_loss)]
 fn spawn_player(mut commands: Commands, paddle_sprites: Res<PaddleSprite>) {
     let player_x = GAME_WIDTH / 2.0 - PADDLE_WIDTH * 3.0;
     commands
@@ -54,11 +60,10 @@ fn spawn_player(mut commands: Commands, paddle_sprites: Res<PaddleSprite>) {
         .with_children(|paddle| {
             for i in 0..PADDLE_SEGMENTS {
                 let off_set = i as f32 - 2.0;
+                let y_offset = PADDLE_WIDTH * off_set;
                 paddle.spawn((
-                    TransformBundle {
-                        local: Transform::from_xyz(0.0, PADDLE_WIDTH * off_set, 0.0),
-                        ..default()
-                    },
+                    Transform::from_xyz(player_x * -1.0, y_offset, 0.0),
+                    YOffset(y_offset),
                     HitBox {
                         poligon: Rectangle::new(PADDLE_WIDTH, PADDLE_WIDTH),
                     },
@@ -79,11 +84,10 @@ fn spawn_player(mut commands: Commands, paddle_sprites: Res<PaddleSprite>) {
         .with_children(|paddle| {
             for i in 0..PADDLE_SEGMENTS {
                 let off_set = i as f32 - 2.0;
+                let y_offset = PADDLE_WIDTH * off_set;
                 paddle.spawn((
-                    TransformBundle {
-                        local: Transform::from_xyz(0.0, PADDLE_WIDTH * off_set, 0.0),
-                        ..default()
-                    },
+                    Transform::from_xyz(player_x, y_offset, 0.0),
+                    YOffset(y_offset),
                     HitBox {
                         poligon: Rectangle::new(PADDLE_WIDTH, PADDLE_WIDTH),
                     },
@@ -93,7 +97,8 @@ fn spawn_player(mut commands: Commands, paddle_sprites: Res<PaddleSprite>) {
         });
 }
 
-fn move_player_1(
+#[allow(clippy::needless_pass_by_value)]
+fn handle_input_player_1(
     mut query: Query<&mut Transform, With<Player1>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
@@ -108,7 +113,8 @@ fn move_player_1(
     }
 }
 
-fn move_player_2(
+#[allow(clippy::needless_pass_by_value)]
+fn handle_input_player_2(
     mut query: Query<&mut Transform, With<Player2>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
@@ -123,14 +129,26 @@ fn move_player_2(
     }
 }
 
-fn collide_player_wall(mut query: Query<&mut Transform, Or<(With<Player1>, With<Player2>)>>) {
-    for mut transform in &mut query {
+#[allow(clippy::needless_pass_by_value)]
+fn move_players(
+    mut player_query: Query<(&mut Transform, &Children), Or<(With<Player1>, With<Player2>)>>,
+    mut hitbox_query: Query<
+        (&mut Transform, &YOffset),
+        (With<HitBox>, Without<Player1>, Without<Player2>),
+    >,
+) {
+    for (mut transform, children) in &mut player_query {
         let paddle_height = PADDLE_HEIGHT / 2.0;
         if transform.translation.y + paddle_height > GAME_HEIGHT / 2.0 {
             transform.translation.y = GAME_HEIGHT / 2.0 - paddle_height;
         }
         if transform.translation.y - paddle_height < GAME_HEIGHT / -2.0 {
             transform.translation.y = GAME_HEIGHT / -2.0 + paddle_height;
+        }
+        for &child in children {
+            if let Ok((mut hitbox_transform, y_offset)) = hitbox_query.get_mut(child) {
+                hitbox_transform.translation.y = transform.translation.y + y_offset.0;
+            }
         }
     }
 }

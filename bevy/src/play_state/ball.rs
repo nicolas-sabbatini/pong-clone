@@ -1,7 +1,7 @@
-use bevy::{math::bounding::Aabb2d, prelude::*, sprite::MaterialMesh2dBundle};
+use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
 use crate::{
-    flow_control::{GameState, PlayState},
+    flow_control::{GameState, PlayState, UpdateStages},
     GAME_HEIGHT,
 };
 
@@ -22,13 +22,14 @@ impl Plugin for Plug {
         app.add_systems(OnEnter(GameState::RunMainLoop), spawn_ball)
             .add_systems(
                 Update,
-                (move_ball, collide_ball_wall)
-                    .chain()
+                move_ball
+                    .in_set(UpdateStages::Movement)
                     .run_if(in_state(PlayState::Match)),
             );
     }
 }
 
+#[allow(clippy::needless_pass_by_value)]
 fn spawn_ball(mut commands: Commands, paddle_sprites: Res<BallSprite>) {
     commands.spawn((
         MaterialMesh2dBundle {
@@ -45,17 +46,14 @@ fn spawn_ball(mut commands: Commands, paddle_sprites: Res<BallSprite>) {
     ));
 }
 
-fn move_ball(mut query: Query<(&mut Transform, &Speed), With<Ball>>, time: Res<Time>) {
-    let (mut transform, speed) = query
-        .get_single_mut()
-        .expect("Unable to get ball position and speed on movement");
-    transform.translation += speed.0 * time.delta_seconds();
-}
-
-fn collide_ball_wall(mut query: Query<(&mut Transform, &mut Speed), With<Ball>>) {
+#[allow(clippy::needless_pass_by_value)]
+fn move_ball(mut query: Query<(&mut Transform, &mut Speed), With<Ball>>, time: Res<Time>) {
     let (mut transform, mut speed) = query
         .get_single_mut()
         .expect("Unable to get ball position and speed on movement");
+
+    transform.translation += speed.0 * time.delta_seconds();
+
     let ball_height = BALL_HEIGHT / 2.0;
     if transform.translation.y + ball_height > GAME_HEIGHT / 2.0 {
         transform.translation.y = GAME_HEIGHT / 2.0 - ball_height;

@@ -1,8 +1,8 @@
-use bevy::{math::bounding::Aabb2d, prelude::*, sprite::Mesh2dHandle};
+use bevy::{prelude::*, sprite::Mesh2dHandle};
 
 use crate::{
     asset_loading::AssetList,
-    flow_control::{GameState, PlayState},
+    flow_control::{GameState, PlayState, UpdateStages},
 };
 
 use self::{
@@ -40,12 +40,13 @@ impl Plugin for Plug {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, load_assets)
             .add_systems(OnEnter(GameState::RunMainLoop), start_game)
-            .add_systems(Update, draw_coliders);
+            .add_systems(Update, draw_coliders.in_set(UpdateStages::Debug));
 
         app.add_plugins((paddle::Plug, ball::Plug));
     }
 }
 
+#[allow(clippy::needless_pass_by_value)]
 fn load_assets(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -77,14 +78,14 @@ fn start_game(mut next_state: ResMut<NextState<PlayState>>) {
     next_state.set(PlayState::Match);
 }
 
-fn draw_coliders(mut gizmos: Gizmos, query: Query<(&HitBox, &GlobalTransform)>) {
+#[allow(clippy::needless_pass_by_value)]
+fn draw_coliders(mut gizmos: Gizmos, query: Query<(&HitBox, &Transform)>) {
     let color = Color::RED;
     for (hit_box, transform) in query.iter() {
-        let (_, rotation, translation) = transform.to_scale_rotation_translation();
         gizmos.primitive_2d(
             hit_box.poligon,
-            translation.xy(),
-            rotation.to_euler(EulerRot::YXZ).2,
+            transform.translation.xy(),
+            transform.rotation.to_euler(EulerRot::YXZ).2,
             color,
         );
     }

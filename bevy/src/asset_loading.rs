@@ -19,7 +19,8 @@ impl Plugin for Plug {
 #[derive(Default, Resource)]
 pub struct AssetList(pub Vec<UntypedHandle>);
 
-pub fn check_asset_loading(
+#[allow(clippy::needless_pass_by_value)]
+fn check_asset_loading(
     asset_server: Res<AssetServer>,
     asset_list: Res<AssetList>,
     mut next_state: ResMut<NextState<GameState>>,
