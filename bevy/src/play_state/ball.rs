@@ -5,16 +5,16 @@ use crate::{
     GAME_HEIGHT,
 };
 
-use super::{BallSprite, HitBox};
+use super::{
+    physics_engine::{HitBox, Speed},
+    BallSprite,
+};
 
 pub const BALL_WIDTH: f32 = 12.0;
 pub const BALL_HEIGHT: f32 = 12.0;
 
 #[derive(Component)]
 struct Ball;
-
-#[derive(Component)]
-struct Speed(Vec3);
 
 pub struct Plug;
 impl Plugin for Plug {
@@ -42,7 +42,7 @@ fn spawn_ball(mut commands: Commands, paddle_sprites: Res<BallSprite>) {
             poligon: Rectangle::new(BALL_WIDTH, BALL_HEIGHT),
         },
         Ball,
-        Speed(Vec3::new(10.0, 100.0, 0.0)),
+        Speed(Vec3::new(100.0, 0.0, 0.0)),
     ));
 }
 

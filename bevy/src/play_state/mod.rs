@@ -2,7 +2,7 @@ use bevy::{prelude::*, sprite::Mesh2dHandle};
 
 use crate::{
     asset_loading::AssetList,
-    flow_control::{GameState, PlayState, UpdateStages},
+    flow_control::{GameState, PlayState},
 };
 
 use self::{
@@ -12,6 +12,7 @@ use self::{
 
 mod ball;
 mod paddle;
+mod physics_engine;
 
 #[derive(Resource)]
 struct TextConfig {
@@ -30,19 +31,13 @@ struct BallSprite {
     material: Handle<ColorMaterial>,
 }
 
-#[derive(Component)]
-struct HitBox {
-    poligon: Rectangle,
-}
-
 pub struct Plug;
 impl Plugin for Plug {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, load_assets)
-            .add_systems(OnEnter(GameState::RunMainLoop), start_game)
-            .add_systems(Update, draw_coliders.in_set(UpdateStages::Debug));
+            .add_systems(OnEnter(GameState::RunMainLoop), start_game);
 
-        app.add_plugins((paddle::Plug, ball::Plug));
+        app.add_plugins((paddle::Plug, ball::Plug, physics_engine::Plug));
     }
 }
 
@@ -74,19 +69,6 @@ fn load_assets(
 }
 
 fn start_game(mut next_state: ResMut<NextState<PlayState>>) {
-    // Change state to game start
+    // TODO Change state to game start
     next_state.set(PlayState::Match);
-}
-
-#[allow(clippy::needless_pass_by_value)]
-fn draw_coliders(mut gizmos: Gizmos, query: Query<(&HitBox, &Transform)>) {
-    let color = Color::RED;
-    for (hit_box, transform) in query.iter() {
-        gizmos.primitive_2d(
-            hit_box.poligon,
-            transform.translation.xy(),
-            transform.rotation.to_euler(EulerRot::YXZ).2,
-            color,
-        );
-    }
 }

@@ -6,19 +6,15 @@ use crate::{
     GAME_HEIGHT, GAME_WIDTH,
 };
 
-use super::{HitBox, PaddleSprite};
+use super::{
+    physics_engine::{HitBox, ReflexTo},
+    PaddleSprite,
+};
 
 pub const PADDLE_WIDTH: f32 = 12.0;
 pub const PADDLE_HEIGHT: f32 = 60.0;
 const PADDLE_MOVEMENT: f32 = 250.0;
 const PADDLE_SEGMENTS: usize = 5;
-
-#[derive(Component)]
-pub enum ReflexTo {
-    Center,
-    Up(f32),
-    Down(f32),
-}
 
 #[derive(Component)]
 struct YOffset(f32);
@@ -51,11 +47,11 @@ fn spawn_player(mut commands: Commands, paddle_sprites: Res<PaddleSprite>) {
             let off_set = i as f32 - 2.0;
             let y_offset = PADDLE_WIDTH * off_set;
             let reflex = if off_set < 0.0 {
-                ReflexTo::Down(off_set * -1.15)
+                ReflexTo(off_set * 10.0)
             } else if off_set == 0.0 {
-                ReflexTo::Center
+                ReflexTo(0.0)
             } else {
-                ReflexTo::Up(off_set * 1.15)
+                ReflexTo(off_set * 10.0)
             };
             paddle.spawn((
                 Transform::from_xyz(x_pos, y_offset, 0.0),
@@ -67,8 +63,8 @@ fn spawn_player(mut commands: Commands, paddle_sprites: Res<PaddleSprite>) {
             ));
         }
     };
-
     let player_x = GAME_WIDTH / 2.0 - PADDLE_WIDTH * 3.0;
+
     commands
         .spawn((
             MaterialMesh2dBundle {
