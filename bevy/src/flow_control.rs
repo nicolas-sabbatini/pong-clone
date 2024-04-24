@@ -4,7 +4,7 @@ use bevy::prelude::*;
 pub enum UpdateStages {
     Input,
     Movement,
-    Colitions,
+    Collitions,
     Debug,
 }
 
@@ -32,8 +32,8 @@ impl Plugin for Plug {
                 (
                     UpdateStages::Input,
                     UpdateStages::Movement.after(UpdateStages::Input),
-                    UpdateStages::Colitions.after(UpdateStages::Movement),
-                    UpdateStages::Debug.after(UpdateStages::Colitions),
+                    UpdateStages::Collitions.after(UpdateStages::Movement),
+                    UpdateStages::Debug.after(UpdateStages::Collitions),
                 )
                     .run_if(in_state(GameState::RunMainLoop)),
             );

@@ -22,7 +22,7 @@ impl Plugin for Plug {
         app.add_systems(OnEnter(GameState::RunMainLoop), spawn_ball)
             .add_systems(
                 Update,
-                move_ball
+                fix_ball_y
                     .in_set(UpdateStages::Movement)
                     .run_if(in_state(PlayState::Match)),
             );
@@ -42,17 +42,15 @@ fn spawn_ball(mut commands: Commands, paddle_sprites: Res<BallSprite>) {
             poligon: Rectangle::new(BALL_WIDTH, BALL_HEIGHT),
         },
         Ball,
-        Speed(Vec3::new(100.0, 0.0, 0.0)),
+        Speed(Vec3::new(150.0, 0.0, 0.0)),
     ));
 }
 
 #[allow(clippy::needless_pass_by_value)]
-fn move_ball(mut query: Query<(&mut Transform, &mut Speed), With<Ball>>, time: Res<Time>) {
+fn fix_ball_y(mut query: Query<(&mut Transform, &mut Speed), With<Ball>>) {
     let (mut transform, mut speed) = query
         .get_single_mut()
         .expect("Unable to get ball position and speed on movement");
-
-    transform.translation += speed.0 * time.delta_seconds();
 
     let ball_height = BALL_HEIGHT / 2.0;
     if transform.translation.y + ball_height > GAME_HEIGHT / 2.0 {

@@ -15,6 +15,7 @@ pub const PADDLE_WIDTH: f32 = 12.0;
 pub const PADDLE_HEIGHT: f32 = 60.0;
 const PADDLE_MOVEMENT: f32 = 250.0;
 const PADDLE_SEGMENTS: usize = 5;
+const REFLEX_SPEED: f32 = 50.0;
 
 #[derive(Component)]
 struct YOffset(f32);
@@ -33,7 +34,7 @@ impl Plugin for Plug {
                 Update,
                 (
                     (handle_input_player_1, handle_input_player_2).in_set(UpdateStages::Input),
-                    move_players.in_set(UpdateStages::Movement),
+                    fix_player_y.in_set(UpdateStages::Movement),
                 )
                     .run_if(in_state(PlayState::Match)),
             );
@@ -47,11 +48,11 @@ fn spawn_player(mut commands: Commands, paddle_sprites: Res<PaddleSprite>) {
             let off_set = i as f32 - 2.0;
             let y_offset = PADDLE_WIDTH * off_set;
             let reflex = if off_set < 0.0 {
-                ReflexTo(off_set * 10.0)
+                ReflexTo(off_set * REFLEX_SPEED)
             } else if off_set == 0.0 {
                 ReflexTo(0.0)
             } else {
-                ReflexTo(off_set * 10.0)
+                ReflexTo(off_set * REFLEX_SPEED)
             };
             paddle.spawn((
                 Transform::from_xyz(x_pos, y_offset, 0.0),
@@ -122,7 +123,7 @@ fn handle_input_player_2(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-fn move_players(
+fn fix_player_y(
     mut player_query: Query<(&mut Transform, &Children), Or<(With<Player1>, With<Player2>)>>,
     mut hitbox_query: Query<
         (&mut Transform, &YOffset),
