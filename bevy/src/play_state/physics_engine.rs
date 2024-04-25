@@ -87,7 +87,6 @@ fn check_collisions(
         ),
         ray,
     };
-    let mut collide = false;
     for (paddle_hitbox, paddle_transform, reflect) in &paddle_hitbox {
         let paddle_aabb = paddle_hitbox.poligon.aabb_2d(
             paddle_transform.translation.xy(),
@@ -96,16 +95,12 @@ fn check_collisions(
         if let Some(collision_distance) = aabb_cast.aabb_collision_at(paddle_aabb) {
             speed.0.x *= REFLEX_MUL;
             speed.0.y += reflect.0;
-            let new_ball_pos = aabb_cast.ray.ray.origin
-                + *aabb_cast.ray.ray.direction * collision_distance * 0.99
-                + aabb_cast.aabb.center();
+            let new_ball_pos =
+                aabb_cast.ray.ray.origin + *aabb_cast.ray.ray.direction * collision_distance;
             ball_transform.translation.x = new_ball_pos.x;
             ball_transform.translation.y = new_ball_pos.y;
-            collide = true;
             break;
         }
     }
-    if !collide {
-        ball_transform.translation += speed.0 * time.delta_seconds();
-    }
+    ball_transform.translation += speed.0 * time.delta_seconds();
 }
