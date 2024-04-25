@@ -1,5 +1,5 @@
 use bevy::{
-    math::bounding::{AabbCast2d, Bounded2d, BoundingVolume, RayCast2d},
+    math::bounding::{AabbCast2d, Bounded2d, RayCast2d},
     prelude::*,
 };
 
