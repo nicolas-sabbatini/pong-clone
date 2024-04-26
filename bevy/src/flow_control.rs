@@ -19,7 +19,10 @@ pub enum GameState {
 pub enum PlayState {
     #[default]
     None,
+    StartMatch,
+    Serve,
     Match,
+    GameOver,
 }
 
 pub struct Plug;

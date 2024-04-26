@@ -31,11 +31,24 @@ struct BallSprite {
     material: Handle<ColorMaterial>,
 }
 
+#[derive(Resource)]
+enum ServeTo {
+    Right,
+    Left,
+}
+
+#[derive(Resource)]
+struct Score {
+    player_1: usize,
+    player_2: usize,
+}
+
 pub struct Plug;
 impl Plugin for Plug {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, load_assets)
-            .add_systems(OnEnter(GameState::RunMainLoop), start_game);
+            .add_systems(OnEnter(GameState::RunMainLoop), start_game)
+            .add_systems(OnEnter(PlayState::StartMatch), init_match);
 
         app.add_plugins((paddle::Plug, ball::Plug, physics_engine::Plug));
     }
@@ -69,6 +82,13 @@ fn load_assets(
 }
 
 fn start_game(mut next_state: ResMut<NextState<PlayState>>) {
-    // TODO Change state to game start
-    next_state.set(PlayState::Match);
+    next_state.set(PlayState::StartMatch);
+}
+
+fn init_match(mut commands: Commands) {
+    commands.insert_resource(ServeTo::Right);
+    commands.insert_resource(Score {
+        player_1: 0,
+        player_2: 0,
+    });
 }

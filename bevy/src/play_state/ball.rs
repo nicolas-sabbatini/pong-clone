@@ -7,11 +7,12 @@ use crate::{
 
 use super::{
     physics_engine::{HitBox, Speed},
-    BallSprite,
+    BallSprite, ServeTo,
 };
 
 pub const BALL_WIDTH: f32 = 12.0;
 pub const BALL_HEIGHT: f32 = 12.0;
+const START_SPEED: f32 = 150.0;
 
 #[derive(Component)]
 struct Ball;
@@ -19,10 +20,12 @@ struct Ball;
 pub struct Plug;
 impl Plugin for Plug {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::RunMainLoop), spawn_ball)
+        app.add_systems(OnEnter(GameState::RunMainLoop), spawn)
+            .add_systems(OnEnter(PlayState::Serve), restart)
+            .add_systems(OnExit(PlayState::Serve), serve)
             .add_systems(
                 Update,
-                fix_ball_y
+                fix_y
                     .in_set(UpdateStages::Movement)
                     .run_if(in_state(PlayState::Match)),
             );
@@ -30,7 +33,7 @@ impl Plugin for Plug {
 }
 
 #[allow(clippy::needless_pass_by_value)]
-fn spawn_ball(mut commands: Commands, paddle_sprites: Res<BallSprite>) {
+fn spawn(mut commands: Commands, paddle_sprites: Res<BallSprite>) {
     commands.spawn((
         MaterialMesh2dBundle {
             mesh: paddle_sprites.mesh.clone(),
@@ -46,8 +49,28 @@ fn spawn_ball(mut commands: Commands, paddle_sprites: Res<BallSprite>) {
     ));
 }
 
+fn restart(mut query: Query<(&mut Transform, &mut Speed), With<Ball>>) {
+    let (mut transform, mut speed) = query
+        .get_single_mut()
+        .expect("Unable to get ball position and speed on movement");
+    transform.translation.x = 0.0;
+    transform.translation.y = 0.0;
+    speed.0 = Vec3::ZERO;
+}
+
 #[allow(clippy::needless_pass_by_value)]
-fn fix_ball_y(mut query: Query<(&mut Transform, &mut Speed), With<Ball>>) {
+fn serve(mut query: Query<&mut Speed, With<Ball>>, serve_to: Res<ServeTo>) {
+    let mut speed = query
+        .get_single_mut()
+        .expect("Unable to get ball position and speed on movement");
+    match *serve_to {
+        ServeTo::Right => speed.0.x = START_SPEED,
+        ServeTo::Left => speed.0.x = START_SPEED * -1.0,
+    }
+}
+
+#[allow(clippy::needless_pass_by_value)]
+fn fix_y(mut query: Query<(&mut Transform, &mut Speed), With<Ball>>) {
     let (mut transform, mut speed) = query
         .get_single_mut()
         .expect("Unable to get ball position and speed on movement");

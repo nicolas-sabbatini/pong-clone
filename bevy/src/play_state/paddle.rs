@@ -29,12 +29,12 @@ struct Player2;
 pub struct Plug;
 impl Plugin for Plug {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::RunMainLoop), spawn_player)
+        app.add_systems(OnEnter(GameState::RunMainLoop), spawn)
             .add_systems(
                 Update,
                 (
                     (handle_input_player_1, handle_input_player_2).in_set(UpdateStages::Input),
-                    fix_player_y.in_set(UpdateStages::Movement),
+                    fix_y.in_set(UpdateStages::Movement),
                 )
                     .run_if(in_state(PlayState::Match)),
             );
@@ -42,7 +42,7 @@ impl Plugin for Plug {
 }
 
 #[allow(clippy::needless_pass_by_value, clippy::cast_precision_loss)]
-fn spawn_player(mut commands: Commands, paddle_sprites: Res<PaddleSprite>) {
+fn spawn(mut commands: Commands, paddle_sprites: Res<PaddleSprite>) {
     let add_segments = |paddle: &mut ChildBuilder, x_pos: f32| {
         for i in 0..PADDLE_SEGMENTS {
             let off_set = i as f32 - 2.0;
@@ -123,7 +123,7 @@ fn handle_input_player_2(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-fn fix_player_y(
+fn fix_y(
     mut player_query: Query<(&mut Transform, &Children), Or<(With<Player1>, With<Player2>)>>,
     mut hitbox_query: Query<
         (&mut Transform, &YOffset),

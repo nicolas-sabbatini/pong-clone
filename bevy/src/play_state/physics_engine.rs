@@ -46,17 +46,6 @@ fn draw_colliders(mut gizmos: Gizmos, query: Query<(&HitBox, &Transform)>) {
     }
 }
 
-fn calculate_ray(origin: Vec3, size: Vec3) -> RayCast2d {
-    let direction = Direction2d::new_unchecked(size.xy().normalize());
-    RayCast2d::from_ray(
-        Ray2d {
-            origin: origin.xy(),
-            direction,
-        },
-        size.length(),
-    )
-}
-
 #[allow(clippy::needless_pass_by_value)]
 fn draw_speed(mut gizmos: Gizmos, query: Query<(&Speed, &Transform)>, time: Res<Time>) {
     for (speed, transform) in &query {
@@ -67,6 +56,17 @@ fn draw_speed(mut gizmos: Gizmos, query: Query<(&Speed, &Transform)>, time: Res<
             Color::GREEN,
         );
     }
+}
+
+fn calculate_ray(origin: Vec3, size: Vec3) -> RayCast2d {
+    let direction = Direction2d::new_unchecked(size.xy().normalize());
+    RayCast2d::from_ray(
+        Ray2d {
+            origin: origin.xy(),
+            direction,
+        },
+        size.length(),
+    )
 }
 
 #[allow(clippy::needless_pass_by_value)]
