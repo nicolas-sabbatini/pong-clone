@@ -48,7 +48,8 @@ impl Plugin for Plug {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, load_assets)
             .add_systems(OnEnter(GameState::RunMainLoop), start_game)
-            .add_systems(OnEnter(PlayState::StartMatch), init_match);
+            .add_systems(OnEnter(PlayState::StartMatch), init_match)
+            .add_systems(Update, serve);
 
         app.add_plugins((paddle::Plug, ball::Plug, physics_engine::Plug));
     }
@@ -83,6 +84,7 @@ fn load_assets(
 
 fn start_game(mut next_state: ResMut<NextState<PlayState>>) {
     next_state.set(PlayState::StartMatch);
+    // next_state.set(PlayState::Match);
 }
 
 fn init_match(mut commands: Commands) {
@@ -91,4 +93,10 @@ fn init_match(mut commands: Commands) {
         player_1: 0,
         player_2: 0,
     });
+}
+
+fn serve(mut next_state: ResMut<NextState<PlayState>>, keyboard_input: Res<ButtonInput<KeyCode>>) {
+    if keyboard_input.pressed(KeyCode::Space) {
+        next_state.set(PlayState::Match);
+    }
 }

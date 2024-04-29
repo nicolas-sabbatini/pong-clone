@@ -30,6 +30,7 @@ pub struct Plug;
 impl Plugin for Plug {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::RunMainLoop), spawn)
+            .add_systems(OnEnter(PlayState::Serve), restart_y)
             .add_systems(
                 Update,
                 (
@@ -122,7 +123,6 @@ fn handle_input_player_2(
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
 fn fix_y(
     mut player_query: Query<(&mut Transform, &Children), Or<(With<Player1>, With<Player2>)>>,
     mut hitbox_query: Query<
@@ -132,16 +132,23 @@ fn fix_y(
 ) {
     for (mut transform, children) in &mut player_query {
         let paddle_height = PADDLE_HEIGHT / 2.0;
-        if transform.translation.y + paddle_height > GAME_HEIGHT / 2.0 {
-            transform.translation.y = GAME_HEIGHT / 2.0 - paddle_height;
+        let game_middle_height = GAME_HEIGHT / 2.0;
+        if transform.translation.y + paddle_height > game_middle_height {
+            transform.translation.y = game_middle_height - paddle_height;
         }
-        if transform.translation.y - paddle_height < GAME_HEIGHT / -2.0 {
-            transform.translation.y = GAME_HEIGHT / -2.0 + paddle_height;
+        if transform.translation.y - paddle_height < game_middle_height * -1.0 {
+            transform.translation.y = game_middle_height * -1.0 + paddle_height;
         }
         for &child in children {
             if let Ok((mut hitbox_transform, y_offset)) = hitbox_query.get_mut(child) {
                 hitbox_transform.translation.y = transform.translation.y + y_offset.0;
             }
         }
+    }
+}
+
+fn restart_y(mut player_query: Query<&mut Transform, Or<(With<Player1>, With<Player2>)>>) {
+    for mut transform in &mut player_query {
+        transform.translation.y = 0.0;
     }
 }
