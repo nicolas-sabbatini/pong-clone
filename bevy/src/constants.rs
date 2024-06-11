@@ -7,3 +7,5 @@ pub const KEY_MAPPING_PLAYER_1: [(KeyCode, Vec3); 2] = [(KeyCode::KeyW, UP), (Ke
 
 pub const KEY_MAPPING_PLAYER_2: [(KeyCode, Vec3); 2] =
     [(KeyCode::ArrowUp, UP), (KeyCode::ArrowDown, DOWN)];
+
+pub const KEY_MAPPING_SERVE: KeyCode = KeyCode::Space;

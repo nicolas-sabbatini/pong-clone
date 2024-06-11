@@ -19,7 +19,7 @@ pub enum GameState {
 pub enum PlayState {
     #[default]
     None,
-    StartMatch,
+    InitMatch,
     Serve,
     Match,
     GameOver,

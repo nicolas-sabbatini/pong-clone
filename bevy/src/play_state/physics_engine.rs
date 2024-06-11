@@ -49,6 +49,9 @@ fn draw_colliders(mut gizmos: Gizmos, query: Query<(&HitBox, &Transform)>) {
 #[allow(clippy::needless_pass_by_value)]
 fn draw_speed(mut gizmos: Gizmos, query: Query<(&Speed, &Transform)>, time: Res<Time>) {
     for (speed, transform) in &query {
+        if speed.0 == Vec3::ZERO {
+            continue;
+        }
         let ray = calculate_ray(transform.translation, speed.0 * time.delta_seconds());
         gizmos.line_2d(
             ray.ray.origin,

@@ -2,6 +2,7 @@ use bevy::{prelude::*, sprite::Mesh2dHandle};
 
 use crate::{
     asset_loading::AssetList,
+    constants::KEY_MAPPING_SERVE,
     flow_control::{GameState, PlayState},
 };
 
@@ -11,6 +12,7 @@ use self::{
 };
 
 mod ball;
+mod gui;
 mod paddle;
 mod physics_engine;
 
@@ -37,7 +39,7 @@ enum ServeTo {
     Left,
 }
 
-#[derive(Resource)]
+#[derive(Resource, PartialEq)]
 struct Score {
     player_1: usize,
     player_2: usize,
@@ -47,11 +49,20 @@ pub struct Plug;
 impl Plugin for Plug {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, load_assets)
-            .add_systems(OnEnter(GameState::RunMainLoop), start_game)
-            .add_systems(OnEnter(PlayState::StartMatch), init_match)
-            .add_systems(Update, serve);
+            .add_systems(OnEnter(GameState::RunMainLoop), start_game_loop)
+            .add_systems(OnEnter(PlayState::InitMatch), init_match)
+            .add_systems(
+                Update,
+                start_match.run_if(in_state(PlayState::InitMatch).and_then(
+                    resource_exists_and_equals(Score {
+                        player_1: 0,
+                        player_2: 0,
+                    }),
+                )),
+            )
+            .add_systems(Update, serve.run_if(in_state(PlayState::Serve)));
 
-        app.add_plugins((paddle::Plug, ball::Plug, physics_engine::Plug));
+        app.add_plugins((paddle::Plug, ball::Plug, physics_engine::Plug, gui::Plug));
     }
 }
 
@@ -63,7 +74,7 @@ fn load_assets(
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut asset_list: ResMut<AssetList>,
 ) {
-    let font = asset_server.load("Bubbly_Bold.ttf");
+    let font = asset_server.load("NewHiScore.ttf");
     asset_list.0.push(font.clone().untyped());
     commands.insert_resource(TextConfig { font });
 
@@ -82,12 +93,13 @@ fn load_assets(
     });
 }
 
-fn start_game(mut next_state: ResMut<NextState<PlayState>>) {
-    next_state.set(PlayState::StartMatch);
-    // next_state.set(PlayState::Match);
+fn start_game_loop(mut next_state: ResMut<NextState<PlayState>>) {
+    info!("Starting game loop");
+    next_state.set(PlayState::InitMatch);
 }
 
 fn init_match(mut commands: Commands) {
+    info!("Creating match");
     commands.insert_resource(ServeTo::Right);
     commands.insert_resource(Score {
         player_1: 0,
@@ -95,8 +107,14 @@ fn init_match(mut commands: Commands) {
     });
 }
 
-fn serve(mut next_state: ResMut<NextState<PlayState>>, keyboard_input: Res<ButtonInput<KeyCode>>) {
-    if keyboard_input.pressed(KeyCode::Space) {
+fn start_match(mut next_state: ResMut<NextState<PlayState>>) {
+    info!("Start match Serve state");
+    next_state.set(PlayState::Serve);
+}
+
+fn serve(keyboard_input: Res<ButtonInput<KeyCode>>, mut next_state: ResMut<NextState<PlayState>>) {
+    if keyboard_input.just_pressed(KEY_MAPPING_SERVE) {
+        info!("Serving");
         next_state.set(PlayState::Match);
     }
 }
