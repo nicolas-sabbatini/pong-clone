@@ -8,6 +8,7 @@ use crate::{
 
 use self::{
     ball::{BALL_HEIGHT, BALL_WIDTH},
+    gui::UpdateScore,
     paddle::{PADDLE_HEIGHT, PADDLE_WIDTH},
 };
 
@@ -39,7 +40,7 @@ enum ServeTo {
     Left,
 }
 
-#[derive(Resource, PartialEq)]
+#[derive(Resource, PartialEq, Debug)]
 struct Score {
     player_1: usize,
     player_2: usize,
@@ -91,6 +92,12 @@ fn load_assets(
         mesh: ball_mesh,
         material: ball_material,
     });
+
+    commands.insert_resource(ServeTo::Right);
+    commands.insert_resource(Score {
+        player_1: 0,
+        player_2: 0,
+    });
 }
 
 fn start_game_loop(mut next_state: ResMut<NextState<PlayState>>) {
@@ -98,13 +105,11 @@ fn start_game_loop(mut next_state: ResMut<NextState<PlayState>>) {
     next_state.set(PlayState::InitMatch);
 }
 
-fn init_match(mut commands: Commands) {
+fn init_match(mut scores: ResMut<Score>, mut update_score_event: EventWriter<UpdateScore>) {
     info!("Creating match");
-    commands.insert_resource(ServeTo::Right);
-    commands.insert_resource(Score {
-        player_1: 0,
-        player_2: 0,
-    });
+    scores.player_1 = 0;
+    scores.player_2 = 0;
+    update_score_event.send(UpdateScore);
 }
 
 fn start_match(mut next_state: ResMut<NextState<PlayState>>) {
