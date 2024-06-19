@@ -1,15 +1,14 @@
 use bevy::prelude::*;
 
-use crate::flow_control::GameState;
+use crate::{camera::GameCamera, flow_control::GameState, GAME_HEIGHT, GAME_WIDTH};
 
 use super::{Score, TextConfig};
 
-// Because font config we must offset the text
-const TEXT_X_OFF_SET: f32 = 2.0;
-const TEXT_X: f32 = 60.0;
-
 #[derive(Event)]
 pub struct UpdateScore;
+
+#[derive(Component)]
+struct RootUiNode;
 
 #[derive(Component)]
 enum Player {
@@ -29,28 +28,56 @@ impl Plugin for Plug {
     }
 }
 
-fn spawn(mut commands: Commands, text_config: Res<TextConfig>) {
+fn spawn(
+    mut commands: Commands,
+    text_config: Res<TextConfig>,
+    camera_query: Query<Entity, With<GameCamera>>,
+) {
+    let game_camera = camera_query
+        .get_single()
+        .expect("Unable to get the game camera target");
     let text_style = TextStyle {
         font: text_config.font.clone(),
         font_size: 80.0,
         color: Color::WHITE,
     };
-    commands.spawn((
-        Text2dBundle {
-            text: Text::from_section("0", text_style.clone()).with_justify(JustifyText::Center),
-            transform: Transform::from_xyz((TEXT_X_OFF_SET + TEXT_X) * -1.0, 170.0, 1.0),
-            ..Default::default()
-        },
-        Player::One,
-    ));
-    commands.spawn((
-        Text2dBundle {
-            text: Text::from_section("0", text_style.clone()).with_justify(JustifyText::Center),
-            transform: Transform::from_xyz(TEXT_X_OFF_SET + TEXT_X, 170.0, 1.0),
-            ..Default::default()
-        },
-        Player::Two,
-    ));
+
+    commands
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    width: Val::Px(GAME_WIDTH),
+                    height: Val::Px(GAME_HEIGHT),
+                    position_type: PositionType::Absolute,
+                    justify_content: JustifyContent::SpaceAround,
+                    align_items: AlignItems::FlexStart,
+                    //border: UiRect::all(Val::Px(5.0)),
+                    ..default()
+                },
+                //border_color: Color::ANTIQUE_WHITE.into(),
+                ..default()
+            },
+            TargetCamera(game_camera),
+            RootUiNode,
+        ))
+        .with_children(|ui_node| {
+            ui_node.spawn((
+                TextBundle {
+                    text: Text::from_section("0", text_style.clone())
+                        .with_justify(JustifyText::Center),
+                    ..default()
+                },
+                Player::One,
+            ));
+            ui_node.spawn((
+                TextBundle {
+                    text: Text::from_section("0", text_style.clone())
+                        .with_justify(JustifyText::Center),
+                    ..default()
+                },
+                Player::Two,
+            ));
+        });
 }
 
 fn update_score(
