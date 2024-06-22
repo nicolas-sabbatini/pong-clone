@@ -1,4 +1,6 @@
+#![allow(clippy::needless_pass_by_value)]
 use bevy::{prelude::*, sprite::Mesh2dHandle};
+use gui::BlinkStatus;
 
 use crate::{
     asset_loading::AssetList,
@@ -75,7 +77,7 @@ fn load_assets(
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut asset_list: ResMut<AssetList>,
 ) {
-    let font = asset_server.load("NewHiScore.ttf");
+    let font = asset_server.load("ArcadeCabinet.ttf");
     asset_list.0.push(font.clone().untyped());
     commands.insert_resource(TextConfig { font });
 
@@ -97,6 +99,13 @@ fn load_assets(
     commands.insert_resource(Score {
         player_1: 0,
         player_2: 0,
+    });
+
+    commands.insert_resource(BlinkStatus {
+        visible_time: 1.0,
+        invisible_time: 0.5,
+        is_visible: false,
+        timer: Timer::from_seconds(0.5, TimerMode::Once),
     });
 }
 
