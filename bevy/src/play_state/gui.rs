@@ -1,9 +1,13 @@
 #![allow(clippy::needless_pass_by_value)]
-use bevy::{prelude::*, utils::tracing::field::debug};
+use bevy::prelude::*;
 
-use crate::{camera::GameCamera, flow_control::GameState, GAME_HEIGHT, GAME_WIDTH};
+use crate::{
+    camera::GameCamera,
+    flow_control::{GameState, PlayState},
+    GAME_HEIGHT, GAME_WIDTH,
+};
 
-use super::{Score, TextConfig};
+use super::{Player, Score, TextConfig};
 
 #[derive(Event)]
 pub struct UpdateScore;
@@ -14,18 +18,18 @@ struct RootUiNode;
 #[derive(Component)]
 struct UiBlink;
 
+#[derive(Component)]
+struct MainText;
+
+#[derive(Component)]
+struct SecondText;
+
 #[derive(Resource, Debug)]
 pub struct BlinkStatus {
     pub visible_time: f32,
     pub invisible_time: f32,
     pub is_visible: bool,
     pub timer: Timer,
-}
-
-#[derive(Component)]
-enum Player {
-    One,
-    Two,
 }
 
 pub struct Plug;
@@ -35,6 +39,20 @@ impl Plugin for Plug {
             .add_systems(
                 OnEnter(GameState::RunMainLoop),
                 (spawn_score, spawn_ready_mesage).chain(),
+            )
+            .add_systems(
+                OnEnter(PlayState::InitMatch),
+                ((restart_main_text, restart_second_text), show_all_ui_text).chain(),
+            )
+            .add_systems(OnEnter(PlayState::Serve), show_all_ui_text)
+            .add_systems(OnEnter(PlayState::Match), hide_all_ui_text)
+            .add_systems(
+                OnEnter(PlayState::GameOver),
+                (
+                    (game_over_main_text, game_over_second_text),
+                    show_all_ui_text,
+                )
+                    .chain(),
             )
             .add_systems(
                 Update,
@@ -97,7 +115,7 @@ fn spawn_score(
                         .with_justify(JustifyText::Center),
                     ..default()
                 },
-                Player::One,
+                Player::Two,
             ));
             ui_node.spawn((
                 TextBundle {
@@ -105,7 +123,7 @@ fn spawn_score(
                         .with_justify(JustifyText::Center),
                     ..default()
                 },
-                Player::Two,
+                Player::One,
             ));
         })
         .id();
@@ -132,22 +150,25 @@ fn spawn_ready_mesage(
             ..default()
         })
         .with_children(|ui_node| {
-            ui_node.spawn(TextBundle {
-                text: Text::from_section(
-                    "READY TO\nPLAY?",
-                    TextStyle {
-                        font: text_config.font.clone(),
-                        font_size: 32.0,
-                        color: Color::WHITE,
-                    },
-                )
-                .with_justify(JustifyText::Center),
-                ..default()
-            });
             ui_node.spawn((
                 TextBundle {
                     text: Text::from_section(
-                        "(PRESS SPACE TO START)",
+                        "READY TO\nPLAY?",
+                        TextStyle {
+                            font: text_config.font.clone(),
+                            font_size: 32.0,
+                            color: Color::WHITE,
+                        },
+                    )
+                    .with_justify(JustifyText::Center),
+                    ..default()
+                },
+                MainText,
+            ));
+            ui_node.spawn((
+                TextBundle {
+                    text: Text::from_section(
+                        "(PRESS SPACE TO SERVE)",
                         TextStyle {
                             font: text_config.font.clone(),
                             font_size: 24.0,
@@ -157,11 +178,22 @@ fn spawn_ready_mesage(
                     .with_justify(JustifyText::Center),
                     ..default()
                 },
+                SecondText,
                 UiBlink,
             ));
         })
         .id();
     commands.entity(root_ui).push_children(&[ready_text]);
+}
+
+fn restart_main_text(mut query: Query<&mut Text, With<MainText>>) {
+    let mut text = query.get_single_mut().expect("Unable to get main text");
+    text.sections[0].value = "READY TO\nPLAY?".to_string();
+}
+
+fn restart_second_text(mut query: Query<&mut Text, With<SecondText>>) {
+    let mut text = query.get_single_mut().expect("Unable to get second text");
+    text.sections[0].value = "(PRESS SPACE TO SERVE)".to_string();
 }
 
 fn blink_text(
@@ -188,20 +220,64 @@ fn blink_text(
     }
 }
 
+fn hide_all_ui_text(
+    mut text_query: Query<&mut Visibility, Or<(With<MainText>, With<SecondText>)>>,
+) {
+    for mut text in &mut text_query {
+        *text = Visibility::Hidden;
+    }
+}
+
+fn show_all_ui_text(
+    mut text_query: Query<&mut Visibility, Or<(With<MainText>, With<SecondText>)>>,
+) {
+    for mut text in &mut text_query {
+        *text = Visibility::Inherited;
+    }
+}
+
 fn update_score(
-    mut query: Query<(&mut Text, &Player)>,
+    mut score_query: Query<(&mut Text, &Player), Without<MainText>>,
+    mut main_text_query: Query<&mut Text, (With<MainText>, Without<Player>)>,
     mut update_score_event: EventReader<UpdateScore>,
     scores: Res<Score>,
+    who_score: Res<Player>,
 ) {
     if update_score_event.is_empty() {
         return;
     }
     info!("Updating scores: {scores:?}");
     update_score_event.clear();
-    for (mut text, player) in &mut query {
+    for (mut text, player) in &mut score_query {
         match player {
             Player::One => text.sections[0].value = scores.player_1.to_string(),
             Player::Two => text.sections[0].value = scores.player_2.to_string(),
         }
     }
+
+    let mut main_text = main_text_query
+        .get_single_mut()
+        .expect("Can't get main text");
+    if scores.player_1 != 0 || scores.player_2 != 0 {
+        main_text.sections[0].value = match *who_score {
+            Player::One => "PLAYER 2\nHAS SCORED!".to_string(),
+            Player::Two => "PLAYER 1\nHAS SCORED!".to_string(),
+        };
+    } else {
+        main_text.sections[0].value = "READY TO\nPLAY?".to_string();
+    }
+}
+
+fn game_over_main_text(mut query: Query<&mut Text, With<MainText>>, scores: Res<Score>) {
+    let mut text = query.get_single_mut().expect("Unable to get main text");
+    if scores.player_1 > scores.player_2 {
+        text.sections[0].value = "PLAYER 1\nWON!!".to_string();
+    } else {
+        text.sections[0].value = "PLAYER 2\nWON!!".to_string();
+    }
+}
+
+fn game_over_second_text(mut query: Query<&mut Text, With<SecondText>>) {
+    let mut text = query.get_single_mut().expect("Unable to get second text");
+    text.sections[0].value = "(PRESS SPACE TO REMATCH)".to_string();
 }

@@ -22,6 +22,7 @@ pub enum PlayState {
     InitMatch,
     Serve,
     Match,
+    Score,
     GameOver,
 }
 

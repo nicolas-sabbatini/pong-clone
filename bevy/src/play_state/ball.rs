@@ -1,13 +1,14 @@
+#![allow(clippy::needless_pass_by_value)]
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
 use crate::{
     flow_control::{GameState, PlayState, UpdateStages},
-    GAME_HEIGHT,
+    GAME_HEIGHT, GAME_WIDTH,
 };
 
 use super::{
     physics_engine::{HitBox, Speed},
-    BallSprite, ServeTo,
+    BallSprite, NotifyScore, Player,
 };
 
 pub const BALL_WIDTH: f32 = 12.0;
@@ -25,14 +26,13 @@ impl Plugin for Plug {
             .add_systems(OnExit(PlayState::Serve), serve)
             .add_systems(
                 Update,
-                fix_y
+                (fix_y, score)
                     .in_set(UpdateStages::Movement)
                     .run_if(in_state(PlayState::Match)),
             );
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
 fn spawn(mut commands: Commands, paddle_sprites: Res<BallSprite>) {
     commands.spawn((
         MaterialMesh2dBundle {
@@ -58,18 +58,16 @@ fn restart(mut query: Query<(&mut Transform, &mut Speed), With<Ball>>) {
     speed.0 = Vec3::ZERO;
 }
 
-#[allow(clippy::needless_pass_by_value)]
-fn serve(mut query: Query<&mut Speed, With<Ball>>, serve_to: Res<ServeTo>) {
+fn serve(mut query: Query<&mut Speed, With<Ball>>, serve_to: Res<Player>) {
     let mut speed = query
         .get_single_mut()
         .expect("Unable to get ball position and speed on movement");
     match *serve_to {
-        ServeTo::Right => speed.0.x = START_SPEED,
-        ServeTo::Left => speed.0.x = START_SPEED * -1.0,
+        Player::One => speed.0.x = START_SPEED,
+        Player::Two => speed.0.x = START_SPEED * -1.0,
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
 fn fix_y(mut query: Query<(&mut Transform, &mut Speed), With<Ball>>) {
     let (mut transform, mut speed) = query
         .get_single_mut()
@@ -83,5 +81,14 @@ fn fix_y(mut query: Query<(&mut Transform, &mut Speed), With<Ball>>) {
     if transform.translation.y - ball_height < GAME_HEIGHT / -2.0 {
         transform.translation.y = GAME_HEIGHT / -2.0 + ball_height;
         speed.0.y *= -1.0;
+    }
+}
+
+fn score(query: Query<&Transform, With<Ball>>, mut event_writer: EventWriter<NotifyScore>) {
+    let ball = query.get_single().expect("Unable to get the ball position");
+    if ball.translation.x > (GAME_WIDTH / 2.0) + BALL_WIDTH * 2.0 {
+        event_writer.send(NotifyScore(Player::Two));
+    } else if ball.translation.x < (GAME_WIDTH / -2.0) - BALL_WIDTH * 2.0 {
+        event_writer.send(NotifyScore(Player::One));
     }
 }

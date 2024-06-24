@@ -8,7 +8,7 @@ use crate::{
 
 use super::{
     physics_engine::{HitBox, ReflexTo},
-    PaddleSprite,
+    PaddleSprite, Player,
 };
 
 pub const PADDLE_WIDTH: f32 = 12.0;
@@ -21,10 +21,7 @@ const REFLEX_SPEED: f32 = 50.0;
 struct YOffset(f32);
 
 #[derive(Component)]
-struct Player1;
-
-#[derive(Component)]
-struct Player2;
+struct Paddle;
 
 pub struct Plug;
 impl Plugin for Plug {
@@ -34,7 +31,7 @@ impl Plugin for Plug {
             .add_systems(
                 Update,
                 (
-                    (handle_input_player_1, handle_input_player_2).in_set(UpdateStages::Input),
+                    handle_input.in_set(UpdateStages::Input),
                     fix_y.in_set(UpdateStages::Movement),
                 )
                     .run_if(in_state(PlayState::Match)),
@@ -42,7 +39,6 @@ impl Plugin for Plug {
     }
 }
 
-#[allow(clippy::needless_pass_by_value, clippy::cast_precision_loss)]
 fn spawn(mut commands: Commands, paddle_sprites: Res<PaddleSprite>) {
     let add_segments = |paddle: &mut ChildBuilder, x_pos: f32| {
         for i in 0..PADDLE_SEGMENTS {
@@ -75,7 +71,8 @@ fn spawn(mut commands: Commands, paddle_sprites: Res<PaddleSprite>) {
                 transform: Transform::from_xyz(player_x * -1.0, 0.0, 10.0),
                 ..default()
             },
-            Player1,
+            Player::One,
+            Paddle,
         ))
         .with_children(|paddle| add_segments(paddle, player_x * -1.0));
     commands
@@ -86,49 +83,33 @@ fn spawn(mut commands: Commands, paddle_sprites: Res<PaddleSprite>) {
                 transform: Transform::from_xyz(player_x, 0.0, 10.0),
                 ..default()
             },
-            Player2,
+            Player::Two,
+            Paddle,
         ))
         .with_children(|paddle| add_segments(paddle, player_x));
 }
 
-#[allow(clippy::needless_pass_by_value)]
-fn handle_input_player_1(
-    mut query: Query<&mut Transform, With<Player1>>,
+fn handle_input(
+    mut query: Query<(&mut Transform, &Player), With<Paddle>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
 ) {
-    let mut transform = query
-        .get_single_mut()
-        .expect("Unable to get player 1 position on movement");
-    for (key, dir) in KEY_MAPPING_PLAYER_1 {
-        if keyboard_input.pressed(key) {
-            transform.translation += dir * PADDLE_MOVEMENT * time.delta_seconds();
-        }
-    }
-}
-
-#[allow(clippy::needless_pass_by_value)]
-fn handle_input_player_2(
-    mut query: Query<&mut Transform, With<Player2>>,
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    time: Res<Time>,
-) {
-    let mut transform = query
-        .get_single_mut()
-        .expect("Unable to get player 2 position on movement");
-    for (key, dir) in KEY_MAPPING_PLAYER_2 {
-        if keyboard_input.pressed(key) {
-            transform.translation += dir * PADDLE_MOVEMENT * time.delta_seconds();
+    for (mut transform, player) in &mut query {
+        let key_map = match player {
+            Player::One => KEY_MAPPING_PLAYER_1,
+            Player::Two => KEY_MAPPING_PLAYER_2,
+        };
+        for (key, dir) in key_map {
+            if keyboard_input.pressed(key) {
+                transform.translation += dir * PADDLE_MOVEMENT * time.delta_seconds();
+            }
         }
     }
 }
 
 fn fix_y(
-    mut player_query: Query<(&mut Transform, &Children), Or<(With<Player1>, With<Player2>)>>,
-    mut hitbox_query: Query<
-        (&mut Transform, &YOffset),
-        (With<HitBox>, Without<Player1>, Without<Player2>),
-    >,
+    mut player_query: Query<(&mut Transform, &Children), With<Paddle>>,
+    mut hitbox_query: Query<(&mut Transform, &YOffset), (With<HitBox>, Without<Paddle>)>,
 ) {
     for (mut transform, children) in &mut player_query {
         let paddle_height = PADDLE_HEIGHT / 2.0;
@@ -147,7 +128,7 @@ fn fix_y(
     }
 }
 
-fn restart_y(mut player_query: Query<&mut Transform, Or<(With<Player1>, With<Player2>)>>) {
+fn restart_y(mut player_query: Query<&mut Transform, With<Paddle>>) {
     for mut transform in &mut player_query {
         transform.translation.y = 0.0;
     }
