@@ -23,40 +23,9 @@ impl Plugin for Plug {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            (draw_colliders, draw_speed).in_set(UpdateStages::Debug),
-        )
-        .add_systems(
-            Update,
             check_collisions
                 .in_set(UpdateStages::Collitions)
                 .run_if(in_state(PlayState::Match)),
-        );
-    }
-}
-
-#[allow(clippy::needless_pass_by_value)]
-fn draw_colliders(mut gizmos: Gizmos, query: Query<(&HitBox, &Transform)>) {
-    for (hit_box, transform) in &query {
-        gizmos.primitive_2d(
-            hit_box.poligon,
-            transform.translation.xy(),
-            transform.rotation.to_euler(EulerRot::YXZ).2,
-            Color::RED,
-        );
-    }
-}
-
-#[allow(clippy::needless_pass_by_value)]
-fn draw_speed(mut gizmos: Gizmos, query: Query<(&Speed, &Transform)>, time: Res<Time>) {
-    for (speed, transform) in &query {
-        if speed.0 == Vec3::ZERO {
-            continue;
-        }
-        let ray = calculate_ray(transform.translation, speed.0 * time.delta_seconds());
-        gizmos.line_2d(
-            ray.ray.origin,
-            ray.ray.origin + *ray.ray.direction * ray.max,
-            Color::GREEN,
         );
     }
 }

@@ -5,7 +5,6 @@ pub enum UpdateStages {
     Input,
     Movement,
     Collitions,
-    Debug,
 }
 
 #[derive(States, Debug, Hash, PartialEq, Eq, Clone, Default)]
@@ -37,7 +36,6 @@ impl Plugin for Plug {
                     UpdateStages::Input,
                     UpdateStages::Movement.after(UpdateStages::Input),
                     UpdateStages::Collitions.after(UpdateStages::Movement),
-                    UpdateStages::Debug.after(UpdateStages::Collitions),
                 )
                     .run_if(in_state(GameState::RunMainLoop)),
             );
